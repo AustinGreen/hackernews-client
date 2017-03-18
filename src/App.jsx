@@ -79,6 +79,7 @@ class App extends Component {
   }
 
   render() {
+    const { searchTerm, list } = this.state;
     return (
       <div className="App">
         <div className="section">
@@ -105,7 +106,7 @@ class App extends Component {
               </tr>
             </thead>
             <tbody>
-              {this.state.list.filter(isSearched(this.state.searchTerm)).map(item => (
+              {list.filter(isSearched(searchTerm)).map(item => (
                 <tr key={item.objectID}>
                   <td><a href={item.url}>{item.title}</a></td>
                   <td>{item.author}</td>
