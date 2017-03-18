@@ -32,21 +32,8 @@ class App extends Component {
     };
 
     // Bind class methods to object instances
-    this.addMe = this.addMe.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
-  }
-
-  addMe() {
-    this.state.list.push({
-      title: 'Future',
-      url: 'https://github.com/austingreen',
-      author: 'Austin Green',
-      num_comments: 22,
-      points: 50,
-      objectID: 2,
-    });
-    this.setState({ list });
   }
 
   onDismiss(id) {
@@ -100,7 +87,6 @@ class App extends Component {
             </tbody>
           </table>
         </div>
-        {/* <button onClick={this.addMe}>Add</button> */}
       </div>
     );
   }
