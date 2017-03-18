@@ -18,6 +18,38 @@ const list = [
     points: 5,
     objectID: 1,
   },
+  {
+    title: 'Electron',
+    url: 'https://facebook.github.io/react/',
+    author: 'Sam Walker',
+    num_comments: 1,
+    points: 8,
+    objectID: 2,
+  },
+  {
+    title: 'Future',
+    url: 'https://github.com/reactjs/redux',
+    author: 'Austin Green',
+    num_comments: 12,
+    points: 52,
+    objectID: 3,
+  },
+  {
+    title: 'Metropolis',
+    url: 'https://facebook.github.io/react/',
+    author: 'Superman',
+    num_comments: 7,
+    points: 14,
+    objectID: 4,
+  },
+  {
+    title: 'Batcave',
+    url: 'https://github.com/reactjs/redux',
+    author: 'Batman',
+    num_comments: 7,
+    points: 25,
+    objectID: 5,
+  },
 ];
 
 const isSearched = searchTerm =>
