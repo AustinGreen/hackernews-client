@@ -1,7 +1,6 @@
 /* eslint-env browser */
 
 import React, { Component, PropTypes } from 'react';
-import './App.css';
 
 const DEFAULT_QUERY = 'redux';
 const DEFAULT_PAGE = 0;
@@ -167,15 +166,23 @@ class App extends Component {
 
   render() {
     const {
-      searchTerm,
       results,
       searchKey,
+      searchTerm,
     } = this.state;
     const page = (results && results[searchKey] && results[searchKey].page) || 0;
     const list = (results && results[searchKey] && results[searchKey].hits) || [];
 
     return (
       <div>
+        <div className="section">
+          <div className="tabs">
+            <ul>
+              <li className="is-active"><a>Search</a></li>
+              <li><a>Trending</a></li>
+            </ul>
+          </div>
+        </div>
         <div className="section column is-half is-offset-one-quarter">
           <Search value={searchTerm} onChange={this.onSearchChange} onSubmit={this.onSearchSubmit}>
             Search
@@ -198,3 +205,5 @@ class App extends Component {
 }
 
 export default App;
+
+export { Button, Search, Table };
