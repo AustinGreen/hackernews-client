@@ -1,71 +1,89 @@
 import React, { Component } from 'react';
 import './App.css';
 
-const list = [
-  {
-    title: 'React',
-    url: 'https://facebook.github.io/react/',
-    author: 'Jordan Walke',
-    num_comments: 3,
-    points: 4,
-    objectID: 0,
-  },
-  {
-    title: 'Redux',
-    url: 'https://github.com/reactjs/redux',
-    author: 'Dan Abramov, Andrew Clark',
-    num_comments: 2,
-    points: 5,
-    objectID: 1,
-  },
-  {
-    title: 'Electron',
-    url: 'https://facebook.github.io/react/',
-    author: 'Sam Walker',
-    num_comments: 1,
-    points: 8,
-    objectID: 2,
-  },
-  {
-    title: 'Future',
-    url: 'https://github.com/reactjs/redux',
-    author: 'Austin Green',
-    num_comments: 12,
-    points: 52,
-    objectID: 3,
-  },
-  {
-    title: 'Metropolis',
-    url: 'https://facebook.github.io/react/',
-    author: 'Superman',
-    num_comments: 7,
-    points: 14,
-    objectID: 4,
-  },
-  {
-    title: 'Batcave',
-    url: 'https://github.com/reactjs/redux',
-    author: 'Batman',
-    num_comments: 7,
-    points: 25,
-    objectID: 5,
-  },
-];
+const DEFAULT_QUERY = 'redux';
+const PATH_BASE = 'https://hn.algolia.com/api/v1';
+const PATH_SEARCH = '/search';
+const PARAM_SEARCH = 'query=';
+const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`;
 
 const isSearched = searchTerm =>
   item => !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
+
+const Search = ({ value, onChange, children }) => (
+  <div className="section">
+    <form className="field">
+      <p className="control">
+        <input
+          className="input"
+          value={value}
+          type="text"
+          placeholder="Search"
+          onChange={onChange}
+        />
+      </p>
+    </form>
+  </div>
+);
+
+const Table = ({ list, pattern, onDismiss }) => (
+  <div className="section">
+    <table className="table is-bordered is-striped">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Author</th>
+          <th>No. of Comments</th>
+          <th>Points</th>
+          <th>Dismiss</th>
+        </tr>
+      </thead>
+      <tbody>
+        {list.filter(isSearched(pattern)).map(item => (
+          <tr key={item.objectID}>
+            <td><a href={item.url}>{item.title}</a></td>
+            <td>{item.author}</td>
+            <td>{item.num_comments}</td>
+            <td>{item.points}</td>
+            <td><Button className="delete" onClick={() => onDismiss(item.objectID)} /></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const Button = ({ onClick, className = '', children }) => (
+  <button className={className} onClick={onClick} />
+);
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      list,
-      searchTerm: '',
+      result: null,
+      searchTerm: DEFAULT_QUERY,
     };
 
     // Bind class methods to object instances
+    this.setSearchTopstories = this.setSearchTopstories.bind(this);
+    this.fetchSearchTopstories = this.fetchSearchTopstories.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
+  }
+
+  setSearchTopstories(result) {
+    this.setState({ result });
+  }
+
+  fetchSearchTopstories(searchTerm) {
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+      .then(response => response.json())
+      .then(result => this.setSearchTopstories(result));
+  }
+  componentDidMount() {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopstories(searchTerm);
   }
 
   onDismiss(id) {
@@ -79,47 +97,16 @@ class App extends Component {
   }
 
   render() {
-    const { searchTerm, list } = this.state;
+    const { searchTerm, result } = this.state;
+
+    if (!result) {
+      return null;
+    }
+
     return (
       <div className="App">
-        <div className="section">
-          <form className="field">
-            <p className="control">
-              <input
-                className="input"
-                type="text"
-                placeholder="Search"
-                onChange={this.onSearchChange}
-              />
-            </p>
-          </form>
-        </div>
-        <div className="section">
-          <table className="table is-bordered is-striped">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Author</th>
-                <th>No. of Comments</th>
-                <th>Points</th>
-                <th>Dismiss</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.filter(isSearched(searchTerm)).map(item => (
-                <tr key={item.objectID}>
-                  <td><a href={item.url}>{item.title}</a></td>
-                  <td>{item.author}</td>
-                  <td>{item.num_comments}</td>
-                  <td>{item.points}</td>
-                  <td>
-                    <a className="delete" onClick={() => this.onDismiss(item.objectID)} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Search value={searchTerm} onChange={this.onSearchChange} />
+        <Table list={result.hits} pattern={searchTerm} onDismiss={this.onDismiss} />
       </div>
     );
   }
