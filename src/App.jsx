@@ -11,46 +11,36 @@ const isSearched = searchTerm =>
   item => !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
 
 const Search = ({ value, onChange, children }) => (
-  <div className="section">
-    <form className="field">
-      <p className="control">
-        <input
-          className="input"
-          value={value}
-          type="text"
-          placeholder="Search"
-          onChange={onChange}
-        />
-      </p>
-    </form>
-  </div>
+  <form className="field">
+    <p className="control">
+      <input className="input" value={value} type="text" placeholder="Search" onChange={onChange} />
+    </p>
+  </form>
 );
 
 const Table = ({ list, pattern, onDismiss }) => (
-  <div className="section">
-    <table className="table is-bordered is-striped">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Author</th>
-          <th>No. of Comments</th>
-          <th>Points</th>
-          <th>Dismiss</th>
+  <table className="table is-bordered is-striped">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Author</th>
+        <th>No. of Comments</th>
+        <th>Points</th>
+        <th>Dismiss</th>
+      </tr>
+    </thead>
+    <tbody>
+      {list.filter(isSearched(pattern)).map(item => (
+        <tr key={item.objectID}>
+          <td><a href={item.url}>{item.title}</a></td>
+          <td>{item.author}</td>
+          <td>{item.num_comments}</td>
+          <td>{item.points}</td>
+          <td><Button className="delete" onClick={() => onDismiss(item.objectID)} /></td>
         </tr>
-      </thead>
-      <tbody>
-        {list.filter(isSearched(pattern)).map(item => (
-          <tr key={item.objectID}>
-            <td><a href={item.url}>{item.title}</a></td>
-            <td>{item.author}</td>
-            <td>{item.num_comments}</td>
-            <td>{item.points}</td>
-            <td><Button className="delete" onClick={() => onDismiss(item.objectID)} /></td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
+      ))}
+    </tbody>
+  </table>
 );
 
 const Button = ({ onClick, className = '', children }) => (
@@ -73,7 +63,7 @@ class App extends Component {
   }
 
   setSearchTopstories(result) {
-    this.setState({ result });
+    setTimeout(() => this.setState({ result }), 2000);
   }
 
   fetchSearchTopstories(searchTerm) {
@@ -88,8 +78,11 @@ class App extends Component {
 
   onDismiss(id) {
     const isNotId = item => item.objectID !== id;
-    const updatedList = this.state.list.filter(isNotId);
-    this.setState({ list: updatedList });
+    const updatedHits = this.state.result.hits.filter(isNotId);
+    console.log(this.state.result);
+    this.setState({
+      result: { ...this.state.result, hits: updatedHits },
+    });
   }
 
   onSearchChange(e) {
@@ -99,14 +92,14 @@ class App extends Component {
   render() {
     const { searchTerm, result } = this.state;
 
-    if (!result) {
-      return null;
-    }
-
     return (
       <div className="App">
-        <Search value={searchTerm} onChange={this.onSearchChange} />
-        <Table list={result.hits} pattern={searchTerm} onDismiss={this.onDismiss} />
+        <div className="section column is-half is-offset-one-quarter">
+          <Search value={searchTerm} onChange={this.onSearchChange} />
+        </div>
+        <div className="section">
+          {result && <Table list={result.hits} pattern={searchTerm} onDismiss={this.onDismiss} />}
+        </div>
       </div>
     );
   }
