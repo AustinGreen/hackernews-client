@@ -1,4 +1,5 @@
-import React, { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
+import styled from 'styled-components';
 import './App.css';
 
 const DEFAULT_QUERY = 'redux';
@@ -49,19 +50,44 @@ const Table = ({ list, pattern, onDismiss }) => (
   </table>
 );
 
-const Button = ({ onClick, className = '', children }) => (
+Table.propTypes = {
+  list: PropTypes.arrayOf(
+    PropTypes.shape({
+      objectID: PropTypes.string.isRequired,
+      author: PropTypes.string,
+      url: PropTypes.string,
+      num_comments: PropTypes.number,
+      points: PropTypes.number,
+    }),
+  ).isRequired,
+  onDismiss: PropTypes.func.isRequired,
+};
+
+const Button = ({ onClick, className, children }) => (
   <button className={className} onClick={onClick}>{children}</button>
 );
+
+Button.propTypes = {
+  onClick: PropTypes.func.isRequired,
+  className: PropTypes.string,
+  children: PropTypes.node.isRequired,
+};
+
+Button.defaultProps = {
+  className: '',
+};
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      result: null,
+      results: null,
+      searchKey: '',
       searchTerm: DEFAULT_QUERY,
     };
 
     // Bind class methods to object instances
+    this.needsToSearchTopstories = this.needsToSearchTopstories.bind(this);
     this.setSearchTopstories = this.setSearchTopstories.bind(this);
     this.fetchSearchTopstories = this.fetchSearchTopstories.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
@@ -69,18 +95,31 @@ class App extends Component {
     this.onDismiss = this.onDismiss.bind(this);
   }
 
+  needsToSearchTopstories(searchTerm) {
+    return !this.state.results[searchTerm];
+  }
+
   onSearchSubmit(e) {
     const { searchTerm } = this.state;
-    this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
+    this.setState({ searchKey: searchTerm });
+    if (this.needsToSearchTopstories(searchTerm)) {
+      this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
+    }
     e.preventDefault();
   }
 
   setSearchTopstories(result) {
     const { hits, page } = result;
-    const oldHits = page !== 0 ? this.state.result.hits : [];
+    const { searchKey, results } = this.state;
+
+    const oldHits = results && results[searchKey] ? results[searchKey].hits : [];
+
     const updatedHits = [...oldHits, ...hits];
     this.setState({
-      result: { hits: updatedHits, page },
+      results: {
+        ...results,
+        [searchKey]: { hits: updatedHits, page },
+      },
     });
   }
 
@@ -93,14 +132,22 @@ class App extends Component {
   }
   componentDidMount() {
     const { searchTerm } = this.state;
+    this.setState({ searchKey: searchTerm });
     this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
   }
 
   onDismiss(id) {
+    const { searchKey, results } = this.state;
+    const { hits, page } = results[searchKey];
+
     const isNotId = item => item.objectID !== id;
-    const updatedHits = this.state.result.hits.filter(isNotId);
+    const updatedHits = hits.filter(isNotId);
+
     this.setState({
-      result: { ...this.state.result, hits: updatedHits },
+      results: {
+        ...results,
+        [searchKey]: { hits: updatedHits, page },
+      },
     });
   }
 
@@ -109,8 +156,13 @@ class App extends Component {
   }
 
   render() {
-    const { searchTerm, result } = this.state;
-    const page = (result && result.page) || 0;
+    const {
+      searchTerm,
+      results,
+      searchKey,
+    } = this.state;
+    const page = (results && results[searchKey] && results[searchKey].page) || 0;
+    const list = (results && results[searchKey] && results[searchKey].hits) || [];
 
     return (
       <div className="App">
@@ -122,11 +174,11 @@ class App extends Component {
           />
         </div>
         <div className="section">
-          {result && <Table list={result.hits} onDismiss={this.onDismiss} />}
+          <Table list={list} onDismiss={this.onDismiss} />
           <div className="container is-fluid has-text-centered">
             <Button
               className="button is-primary"
-              onClick={() => this.fetchSearchTopstories(searchTerm, page + 1)}
+              onClick={() => this.fetchSearchTopstories(searchKey, page + 1)}
             >
               Load More
             </Button>
@@ -136,5 +188,9 @@ class App extends Component {
     );
   }
 }
+
+App.propTypes = {
+  className: PropTypes.string,
+};
 
 export default App;
