@@ -1,5 +1,6 @@
+/* eslint-env browser */
+
 import React, { Component, PropTypes } from 'react';
-import styled from 'styled-components';
 import './App.css';
 
 const DEFAULT_QUERY = 'redux';
@@ -19,13 +20,20 @@ const Search = ({ value, onChange, onSubmit, children }) => (
     </p>
     <p className="control">
       <button type="submit" className="button is-primary">
-        Search
+        {children}
       </button>
     </p>
   </form>
 );
 
-const Table = ({ list, pattern, onDismiss }) => (
+Search.propTypes = {
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  children: PropTypes.node.isRequired,
+};
+
+const Table = ({ list, onDismiss }) => (
   <table className="table is-bordered is-striped">
     <thead>
       <tr>
@@ -82,7 +90,7 @@ class App extends Component {
     super(props);
     this.state = {
       results: null,
-      searchKey: '',
+      searchKey: DEFAULT_QUERY,
       searchTerm: DEFAULT_QUERY,
     };
 
@@ -95,8 +103,11 @@ class App extends Component {
     this.onDismiss = this.onDismiss.bind(this);
   }
 
-  needsToSearchTopstories(searchTerm) {
-    return !this.state.results[searchTerm];
+  componentDidMount() {
+    const { searchTerm } = this.state;
+    // this.setState({ searchKey: searchTerm });
+    // commented this out in favor of defaulting searchKey to DEFAULT_QUERY
+    this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
   }
 
   onSearchSubmit(e) {
@@ -106,6 +117,25 @@ class App extends Component {
       this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
     }
     e.preventDefault();
+  }
+
+  onDismiss(id) {
+    const { searchKey, results } = this.state;
+    const { hits, page } = results[searchKey];
+
+    const isNotId = item => item.objectID !== id;
+    const updatedHits = hits.filter(isNotId);
+
+    this.setState({
+      results: {
+        ...results,
+        [searchKey]: { hits: updatedHits, page },
+      },
+    });
+  }
+
+  onSearchChange(e) {
+    this.setState({ searchTerm: e.target.value });
   }
 
   setSearchTopstories(result) {
@@ -130,29 +160,9 @@ class App extends Component {
       .then(response => response.json())
       .then(result => this.setSearchTopstories(result));
   }
-  componentDidMount() {
-    const { searchTerm } = this.state;
-    this.setState({ searchKey: searchTerm });
-    this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
-  }
 
-  onDismiss(id) {
-    const { searchKey, results } = this.state;
-    const { hits, page } = results[searchKey];
-
-    const isNotId = item => item.objectID !== id;
-    const updatedHits = hits.filter(isNotId);
-
-    this.setState({
-      results: {
-        ...results,
-        [searchKey]: { hits: updatedHits, page },
-      },
-    });
-  }
-
-  onSearchChange(e) {
-    this.setState({ searchTerm: e.target.value });
+  needsToSearchTopstories(searchTerm) {
+    return !this.state.results[searchTerm];
   }
 
   render() {
@@ -165,13 +175,11 @@ class App extends Component {
     const list = (results && results[searchKey] && results[searchKey].hits) || [];
 
     return (
-      <div className="App">
+      <div>
         <div className="section column is-half is-offset-one-quarter">
-          <Search
-            value={searchTerm}
-            onChange={this.onSearchChange}
-            onSubmit={this.onSearchSubmit}
-          />
+          <Search value={searchTerm} onChange={this.onSearchChange} onSubmit={this.onSearchSubmit}>
+            Search
+          </Search>
         </div>
         <div className="section">
           <Table list={list} onDismiss={this.onDismiss} />
@@ -188,9 +196,5 @@ class App extends Component {
     );
   }
 }
-
-App.propTypes = {
-  className: PropTypes.string,
-};
 
 export default App;
