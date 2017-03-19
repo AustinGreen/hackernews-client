@@ -2,18 +2,24 @@ import React, { Component } from 'react';
 import './App.css';
 
 const DEFAULT_QUERY = 'redux';
+const DEFAULT_PAGE = 0;
+const DEFAULT_HPP = '100';
+
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
-const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`;
+const PARAM_PAGE = 'page=';
+const PARAM_HPP = 'hitsPerPage=';
 
-const isSearched = searchTerm =>
-  item => !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
-
-const Search = ({ value, onChange, children }) => (
-  <form className="field">
-    <p className="control">
+const Search = ({ value, onChange, onSubmit, children }) => (
+  <form onSubmit={onSubmit} className="field has-addons has-addons-centered">
+    <p className="control is-expanded">
       <input className="input" value={value} type="text" placeholder="Search" onChange={onChange} />
+    </p>
+    <p className="control">
+      <button type="submit" className="button is-primary">
+        Search
+      </button>
     </p>
   </form>
 );
@@ -30,7 +36,7 @@ const Table = ({ list, pattern, onDismiss }) => (
       </tr>
     </thead>
     <tbody>
-      {list.filter(isSearched(pattern)).map(item => (
+      {list.map(item => (
         <tr key={item.objectID}>
           <td><a href={item.url}>{item.title}</a></td>
           <td>{item.author}</td>
@@ -44,7 +50,7 @@ const Table = ({ list, pattern, onDismiss }) => (
 );
 
 const Button = ({ onClick, className = '', children }) => (
-  <button className={className} onClick={onClick} />
+  <button className={className} onClick={onClick}>{children}</button>
 );
 
 class App extends Component {
@@ -58,28 +64,41 @@ class App extends Component {
     // Bind class methods to object instances
     this.setSearchTopstories = this.setSearchTopstories.bind(this);
     this.fetchSearchTopstories = this.fetchSearchTopstories.bind(this);
-    this.onDismiss = this.onDismiss.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
+    this.onSearchSubmit = this.onSearchSubmit.bind(this);
+    this.onDismiss = this.onDismiss.bind(this);
+  }
+
+  onSearchSubmit(e) {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
+    e.preventDefault();
   }
 
   setSearchTopstories(result) {
-    setTimeout(() => this.setState({ result }), 2000);
+    const { hits, page } = result;
+    const oldHits = page !== 0 ? this.state.result.hits : [];
+    const updatedHits = [...oldHits, ...hits];
+    this.setState({
+      result: { hits: updatedHits, page },
+    });
   }
 
-  fetchSearchTopstories(searchTerm) {
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+  fetchSearchTopstories(searchTerm, page) {
+    fetch(
+      `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`,
+    )
       .then(response => response.json())
       .then(result => this.setSearchTopstories(result));
   }
   componentDidMount() {
     const { searchTerm } = this.state;
-    this.fetchSearchTopstories(searchTerm);
+    this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
   }
 
   onDismiss(id) {
     const isNotId = item => item.objectID !== id;
     const updatedHits = this.state.result.hits.filter(isNotId);
-    console.log(this.state.result);
     this.setState({
       result: { ...this.state.result, hits: updatedHits },
     });
@@ -91,14 +110,27 @@ class App extends Component {
 
   render() {
     const { searchTerm, result } = this.state;
+    const page = (result && result.page) || 0;
 
     return (
       <div className="App">
         <div className="section column is-half is-offset-one-quarter">
-          <Search value={searchTerm} onChange={this.onSearchChange} />
+          <Search
+            value={searchTerm}
+            onChange={this.onSearchChange}
+            onSubmit={this.onSearchSubmit}
+          />
         </div>
         <div className="section">
-          {result && <Table list={result.hits} pattern={searchTerm} onDismiss={this.onDismiss} />}
+          {result && <Table list={result.hits} onDismiss={this.onDismiss} />}
+          <div className="container is-fluid has-text-centered">
+            <Button
+              className="button is-primary"
+              onClick={() => this.fetchSearchTopstories(searchTerm, page + 1)}
+            >
+              Load More
+            </Button>
+          </div>
         </div>
       </div>
     );
