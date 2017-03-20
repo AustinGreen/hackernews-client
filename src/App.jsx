@@ -1,6 +1,7 @@
 /* eslint-env browser */
 
 import React, { Component, PropTypes } from 'react';
+import { sortBy } from 'lodash';
 import FontAwesome from 'react-fontawesome';
 
 const DEFAULT_QUERY = 'redux';
@@ -13,13 +14,26 @@ const PARAM_SEARCH = 'query=';
 const PARAM_PAGE = 'page=';
 const PARAM_HPP = 'hitsPerPage=';
 
-// Disabled in favor of bulma handling loading
-// const loadingStyle = {
-//   paddingLeft: '17.5px',
-//   paddingRight: '17.5px',
-// };
-//
-// const Loading = () => <div><FontAwesome name="cog" spin style={loadingStyle} /></div>;
+const SORTS = {
+  NONE: list => list,
+  TITLE: list => sortBy(list, 'title'),
+  AUTHOR: list => sortBy(list, 'author'),
+  COMMENTS: list => sortBy(list, 'num_comments').reverse(),
+  POINTS: list => sortBy(list, 'points').reverse(),
+};
+
+const Sort = ({ sortKey, activeSortKey, onSort, children, isSortReverse }) => (
+  <th onClick={() => onSort(sortKey)} style={{ cursor: 'pointer' }}>
+    {sortKey === activeSortKey
+      ? <FontAwesome
+        name="caret-down"
+        className={isSortReverse ? 'fa-rotate-180' : ''}
+        style={{ verticalAlign: 'middle' }}
+      />
+      : ''}
+    {children}
+  </th>
+);
 
 const Search = ({ value, onChange, onSubmit, children, isLoading }) => (
   <form onSubmit={onSubmit} className="field has-addons has-addons-centered">
@@ -46,30 +60,70 @@ Search.propTypes = {
   isLoading: PropTypes.boolValue,
 };
 
-const Table = ({ list, onDismiss }) => (
-  <table className="table is-bordered is-striped">
-    <thead>
-      <tr>
-        <th>Title</th>
-        <th>Author</th>
-        <th>Comments</th>
-        <th>Points</th>
-        <th>Dismiss</th>
-      </tr>
-    </thead>
-    <tbody>
-      {list.map(item => (
-        <tr key={item.objectID}>
-          <td><a href={item.url}>{item.title}</a></td>
-          <td>{item.author}</td>
-          <td>{item.num_comments}</td>
-          <td>{item.points}</td>
-          <td><Button className="delete" onClick={() => onDismiss(item.objectID)} /></td>
+const Table = (
+  {
+    list,
+    sortKey,
+    isSortReverse,
+    onSort,
+    onDismiss,
+  },
+) => {
+  const sortedList = SORTS[sortKey](list);
+  const reverseSortedList = isSortReverse ? sortedList.reverse() : sortedList;
+  return (
+    <table className="table is-striped">
+      <thead>
+        <tr>
+          <Sort
+            sortKey={'TITLE'}
+            onSort={onSort}
+            activeSortKey={sortKey}
+            isSortReverse={isSortReverse}
+          >
+            {' '}Title
+          </Sort>
+          <Sort
+            sortKey={'AUTHOR'}
+            onSort={onSort}
+            activeSortKey={sortKey}
+            isSortReverse={isSortReverse}
+          >
+            {' '}Author
+          </Sort>
+          <Sort
+            sortKey={'COMMENTS'}
+            onSort={onSort}
+            activeSortKey={sortKey}
+            isSortReverse={isSortReverse}
+          >
+            {' '}Comments
+          </Sort>
+          <Sort
+            sortKey={'POINTS'}
+            onSort={onSort}
+            activeSortKey={sortKey}
+            isSortReverse={isSortReverse}
+          >
+            {' '}Points
+          </Sort>
+          <th>Archive</th>
         </tr>
+      </thead>
+      {reverseSortedList.map(item => (
+        <tbody>
+          <tr key={item.objectID}>
+            <td><a href={item.url}>{item.title}</a></td>
+            <td>{item.author}</td>
+            <td>{item.num_comments}</td>
+            <td>{item.points}</td>
+            <td><Button className="delete" onClick={() => onDismiss(item.objectID)} /></td>
+          </tr>
+        </tbody>
       ))}
-    </tbody>
-  </table>
-);
+    </table>
+  );
+};
 
 Table.propTypes = {
   list: PropTypes.arrayOf(
@@ -106,6 +160,8 @@ class App extends Component {
       searchKey: DEFAULT_QUERY,
       searchTerm: DEFAULT_QUERY,
       isLoading: false,
+      sortKey: 'NONE',
+      isSortReverse: false,
     };
 
     // Bind class methods to object instances
@@ -115,6 +171,7 @@ class App extends Component {
     this.onSearchChange = this.onSearchChange.bind(this);
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
+    this.onSort = this.onSort.bind(this);
   }
 
   componentDidMount() {
@@ -122,6 +179,11 @@ class App extends Component {
     // this.setState({ searchKey: searchTerm });
     // commented this out in favor of defaulting searchKey to DEFAULT_QUERY
     this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
+  }
+
+  onSort(sortKey) {
+    const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
+    this.setState({ sortKey, isSortReverse });
   }
 
   onSearchSubmit(e) {
@@ -187,6 +249,8 @@ class App extends Component {
       searchKey,
       searchTerm,
       isLoading,
+      sortKey,
+      isSortReverse,
     } = this.state;
     const page = (results && results[searchKey] && results[searchKey].page) || 0;
     const list = (results && results[searchKey] && results[searchKey].hits) || [];
@@ -212,7 +276,13 @@ class App extends Component {
           </Search>
         </div>
         <div className="section">
-          <Table list={list} onDismiss={this.onDismiss} />
+          <Table
+            list={list}
+            onDismiss={this.onDismiss}
+            sortKey={sortKey}
+            onSort={this.onSort}
+            isSortReverse={isSortReverse}
+          />
           <div className="container is-fluid has-text-centered">
             {isLoading
               ? <Button className="button is-primary is-loading is-disabled">
