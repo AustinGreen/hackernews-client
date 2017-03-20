@@ -52,7 +52,7 @@ const Table = ({ list, onDismiss }) => (
       <tr>
         <th>Title</th>
         <th>Author</th>
-        <th>No. of Comments</th>
+        <th>Comments</th>
         <th>Points</th>
         <th>Dismiss</th>
       </tr>
