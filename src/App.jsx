@@ -1,6 +1,7 @@
 /* eslint-env browser */
 
 import React, { Component, PropTypes } from 'react';
+import FontAwesome from 'react-fontawesome';
 
 const DEFAULT_QUERY = 'redux';
 const DEFAULT_PAGE = 0;
@@ -12,15 +13,27 @@ const PARAM_SEARCH = 'query=';
 const PARAM_PAGE = 'page=';
 const PARAM_HPP = 'hitsPerPage=';
 
-const Search = ({ value, onChange, onSubmit, children }) => (
+// Disabled in favor of bulma handling loading
+// const loadingStyle = {
+//   paddingLeft: '17.5px',
+//   paddingRight: '17.5px',
+// };
+//
+// const Loading = () => <div><FontAwesome name="cog" spin style={loadingStyle} /></div>;
+
+const Search = ({ value, onChange, onSubmit, children, isLoading }) => (
   <form onSubmit={onSubmit} className="field has-addons has-addons-centered">
     <p className="control is-expanded">
       <input className="input" value={value} type="text" placeholder="Search" onChange={onChange} />
     </p>
     <p className="control">
-      <button type="submit" className="button is-primary">
-        {children}
-      </button>
+      {isLoading
+        ? <button type="submit" className="button is-primary is-loading is-disabled">
+          {children}
+        </button>
+        : <button type="submit" className="button is-primary">
+          {children}
+        </button>}
     </p>
   </form>
 );
@@ -30,6 +43,7 @@ Search.propTypes = {
   onChange: PropTypes.func,
   onSubmit: PropTypes.func,
   children: PropTypes.node,
+  isLoading: PropTypes.boolValue,
 };
 
 const Table = ({ list, onDismiss }) => (
@@ -91,6 +105,7 @@ class App extends Component {
       results: null,
       searchKey: DEFAULT_QUERY,
       searchTerm: DEFAULT_QUERY,
+      isLoading: false,
     };
 
     // Bind class methods to object instances
@@ -149,10 +164,12 @@ class App extends Component {
         ...results,
         [searchKey]: { hits: updatedHits, page },
       },
+      isLoading: false,
     });
   }
 
   fetchSearchTopstories(searchTerm, page) {
+    this.setState({ isLoading: true });
     fetch(
       `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`,
     )
@@ -169,6 +186,7 @@ class App extends Component {
       results,
       searchKey,
       searchTerm,
+      isLoading,
     } = this.state;
     const page = (results && results[searchKey] && results[searchKey].page) || 0;
     const list = (results && results[searchKey] && results[searchKey].hits) || [];
@@ -184,19 +202,28 @@ class App extends Component {
           </div>
         </div>
         <div className="section column is-half is-offset-one-quarter">
-          <Search value={searchTerm} onChange={this.onSearchChange} onSubmit={this.onSearchSubmit}>
+          <Search
+            value={searchTerm}
+            onChange={this.onSearchChange}
+            onSubmit={this.onSearchSubmit}
+            isLoading={isLoading}
+          >
             Search
           </Search>
         </div>
         <div className="section">
           <Table list={list} onDismiss={this.onDismiss} />
           <div className="container is-fluid has-text-centered">
-            <Button
-              className="button is-primary"
-              onClick={() => this.fetchSearchTopstories(searchKey, page + 1)}
-            >
-              Load More
-            </Button>
+            {isLoading
+              ? <Button className="button is-primary is-loading is-disabled">
+                  Load More
+                </Button>
+              : <Button
+                className="button is-primary"
+                onClick={() => this.fetchSearchTopstories(searchKey, page + 1)}
+              >
+                  Load More
+                </Button>}
           </div>
         </div>
       </div>
