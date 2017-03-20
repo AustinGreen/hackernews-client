@@ -4,7 +4,7 @@ import React, { Component, PropTypes } from 'react';
 import { sortBy } from 'lodash';
 import FontAwesome from 'react-fontawesome';
 
-const DEFAULT_QUERY = 'redux';
+const DEFAULT_QUERY = 'Tesla';
 const DEFAULT_PAGE = 0;
 const DEFAULT_HPP = '100';
 
@@ -144,7 +144,7 @@ class Table extends Component {
         {reverseSortedList.map(item => (
           <tbody>
             <tr key={item.objectID}>
-              <td><a href={item.url}>{item.title}</a></td>
+              <td><a href={item.url} rel="noopener noreferrer" target="_blank">{item.title}</a></td>
               <td>{item.author}</td>
               <td>{item.num_comments}</td>
               <td>{item.points}</td>
@@ -273,14 +273,14 @@ class App extends Component {
 
     return (
       <div>
-        <div className="section">
+        {/* <div className="section">
           <div className="tabs">
             <ul>
               <li className="is-active"><a>Search</a></li>
               <li><a>Trending</a></li>
             </ul>
           </div>
-        </div>
+        </div> */}
         <div className="section column is-half is-offset-one-quarter">
           <Search
             value={searchTerm}
