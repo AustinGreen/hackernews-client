@@ -104,7 +104,7 @@ class Table extends Component {
     const reverseSortedList = isSortReverse ? sortedList.reverse() : sortedList;
     return (
       <table className="table is-striped">
-        <thead>
+        <thead className="is-hidden-mobile">
           <tr>
             <Sort
               sortKey={'TITLE'}
@@ -145,10 +145,12 @@ class Table extends Component {
           <tbody>
             <tr key={item.objectID}>
               <td><a href={item.url} rel="noopener noreferrer" target="_blank">{item.title}</a></td>
-              <td>{item.author}</td>
-              <td>{item.num_comments}</td>
-              <td>{item.points}</td>
-              <td><Button className="delete" onClick={() => onDismiss(item.objectID)} /></td>
+              <td className="is-hidden-mobile">{item.author}</td>
+              <td className="is-hidden-mobile">{item.num_comments}</td>
+              <td className="is-hidden-mobile">{item.points}</td>
+              <td style={{ verticalAlign: 'middle' }}>
+                <Button className="delete" onClick={() => onDismiss(item.objectID)} />
+              </td>
             </tr>
           </tbody>
         ))}
