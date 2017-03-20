@@ -26,10 +26,10 @@ const Search = ({ value, onChange, onSubmit, children }) => (
 );
 
 Search.propTypes = {
-  value: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
-  children: PropTypes.node.isRequired,
+  value: PropTypes.string,
+  onChange: PropTypes.func,
+  onSubmit: PropTypes.func,
+  children: PropTypes.node,
 };
 
 const Table = ({ list, onDismiss }) => (
@@ -67,7 +67,7 @@ Table.propTypes = {
       points: PropTypes.number,
     }),
   ).isRequired,
-  onDismiss: PropTypes.func.isRequired,
+  onDismiss: PropTypes.func,
 };
 
 const Button = ({ onClick, className, children }) => (
@@ -75,9 +75,9 @@ const Button = ({ onClick, className, children }) => (
 );
 
 Button.propTypes = {
-  onClick: PropTypes.func.isRequired,
+  onClick: PropTypes.func,
   className: PropTypes.string,
-  children: PropTypes.node.isRequired,
+  children: PropTypes.node,
 };
 
 Button.defaultProps = {

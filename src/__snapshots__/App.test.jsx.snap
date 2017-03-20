@@ -1,0 +1,184 @@
+exports[`App snapshots 1`] = `
+<div>
+  <div
+    className="section">
+    <div
+      className="tabs">
+      <ul>
+        <li
+          className="is-active">
+          <a>
+            Search
+          </a>
+        </li>
+        <li>
+          <a>
+            Trending
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div
+    className="section column is-half is-offset-one-quarter">
+    <form
+      className="field has-addons has-addons-centered"
+      onSubmit={[Function]}>
+      <p
+        className="control is-expanded">
+        <input
+          className="input"
+          onChange={[Function]}
+          placeholder="Search"
+          type="text"
+          value="redux" />
+      </p>
+      <p
+        className="control">
+        <button
+          className="button is-primary"
+          type="submit">
+          Search
+        </button>
+      </p>
+    </form>
+  </div>
+  <div
+    className="section">
+    <table
+      className="table is-bordered is-striped">
+      <thead>
+        <tr>
+          <th>
+            Title
+          </th>
+          <th>
+            Author
+          </th>
+          <th>
+            No. of Comments
+          </th>
+          <th>
+            Points
+          </th>
+          <th>
+            Dismiss
+          </th>
+        </tr>
+      </thead>
+      <tbody />
+    </table>
+    <div
+      className="container is-fluid has-text-centered">
+      <button
+        className="button is-primary"
+        onClick={[Function]}>
+        Load More
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Button snapshots 1`] = `
+<button
+  className=""
+  onClick={undefined}>
+  Give Me More
+</button>
+`;
+
+exports[`Search snapshots 1`] = `
+<form
+  className="field has-addons has-addons-centered"
+  onSubmit={undefined}>
+  <p
+    className="control is-expanded">
+    <input
+      className="input"
+      onChange={undefined}
+      placeholder="Search"
+      type="text"
+      value={undefined} />
+  </p>
+  <p
+    className="control">
+    <button
+      className="button is-primary"
+      type="submit">
+      Search
+    </button>
+  </p>
+</form>
+`;
+
+exports[`Table snapshots 1`] = `
+<table
+  className="table is-bordered is-striped">
+  <thead>
+    <tr>
+      <th>
+        Title
+      </th>
+      <th>
+        Author
+      </th>
+      <th>
+        No. of Comments
+      </th>
+      <th>
+        Points
+      </th>
+      <th>
+        Dismiss
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <a
+          href={undefined}>
+          1
+        </a>
+      </td>
+      <td>
+        1
+      </td>
+      <td>
+        1
+      </td>
+      <td>
+        2
+      </td>
+      <td>
+        <button
+          className="delete"
+          onClick={[Function]} />
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a
+          href={undefined}>
+          2
+        </a>
+      </td>
+      <td>
+        2
+      </td>
+      <td>
+        1
+      </td>
+      <td>
+        2
+      </td>
+      <td>
+        <button
+          className="delete"
+          onClick={[Function]} />
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;
