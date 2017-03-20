@@ -22,6 +22,20 @@ const SORTS = {
   POINTS: list => sortBy(list, 'points').reverse(),
 };
 
+const updateSearchTopstoriesState = (hits, page) =>
+  (prevState) => {
+    const { searchKey, results } = prevState;
+    const oldHits = results && results[searchKey] ? results[searchKey].hits : [];
+    const updatedHits = [...oldHits, ...hits];
+    return {
+      results: {
+        ...results,
+        [searchKey]: { hits: updatedHits, page },
+      },
+      isLoading: false,
+    };
+  };
+
 const Sort = ({ sortKey, activeSortKey, onSort, children, isSortReverse }) => (
   <th onClick={() => onSort(sortKey)} style={{ cursor: 'pointer' }}>
     {sortKey === activeSortKey
@@ -60,70 +74,88 @@ Search.propTypes = {
   isLoading: PropTypes.boolValue,
 };
 
-const Table = (
-  {
-    list,
-    sortKey,
-    isSortReverse,
-    onSort,
-    onDismiss,
-  },
-) => {
-  const sortedList = SORTS[sortKey](list);
-  const reverseSortedList = isSortReverse ? sortedList.reverse() : sortedList;
-  return (
-    <table className="table is-striped">
-      <thead>
-        <tr>
-          <Sort
-            sortKey={'TITLE'}
-            onSort={onSort}
-            activeSortKey={sortKey}
-            isSortReverse={isSortReverse}
-          >
-            {' '}Title
-          </Sort>
-          <Sort
-            sortKey={'AUTHOR'}
-            onSort={onSort}
-            activeSortKey={sortKey}
-            isSortReverse={isSortReverse}
-          >
-            {' '}Author
-          </Sort>
-          <Sort
-            sortKey={'COMMENTS'}
-            onSort={onSort}
-            activeSortKey={sortKey}
-            isSortReverse={isSortReverse}
-          >
-            {' '}Comments
-          </Sort>
-          <Sort
-            sortKey={'POINTS'}
-            onSort={onSort}
-            activeSortKey={sortKey}
-            isSortReverse={isSortReverse}
-          >
-            {' '}Points
-          </Sort>
-          <th>Archive</th>
-        </tr>
-      </thead>
-      {reverseSortedList.map(item => (
-        <tbody>
-          <tr key={item.objectID}>
-            <td><a href={item.url}>{item.title}</a></td>
-            <td>{item.author}</td>
-            <td>{item.num_comments}</td>
-            <td>{item.points}</td>
-            <td><Button className="delete" onClick={() => onDismiss(item.objectID)} /></td>
+class Table extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      sortKey: 'NONE',
+      isSortReverse: false,
+    };
+    this.onSort = this.onSort.bind(this);
+  }
+
+  onSort(sortKey) {
+    const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
+    this.setState({ sortKey, isSortReverse });
+  }
+
+  render() {
+    const {
+      list,
+      onDismiss,
+    } = this.props;
+
+    const {
+      sortKey,
+      isSortReverse,
+    } = this.state;
+
+    const sortedList = SORTS[sortKey](list);
+    const reverseSortedList = isSortReverse ? sortedList.reverse() : sortedList;
+    return (
+      <table className="table is-striped">
+        <thead>
+          <tr>
+            <Sort
+              sortKey={'TITLE'}
+              onSort={this.onSort}
+              activeSortKey={sortKey}
+              isSortReverse={isSortReverse}
+            >
+              {' '}Title
+            </Sort>
+            <Sort
+              sortKey={'AUTHOR'}
+              onSort={this.onSort}
+              activeSortKey={sortKey}
+              isSortReverse={isSortReverse}
+            >
+              {' '}Author
+            </Sort>
+            <Sort
+              sortKey={'COMMENTS'}
+              onSort={this.onSort}
+              activeSortKey={sortKey}
+              isSortReverse={isSortReverse}
+            >
+              {' '}Comments
+            </Sort>
+            <Sort
+              sortKey={'POINTS'}
+              onSort={this.onSort}
+              activeSortKey={sortKey}
+              isSortReverse={isSortReverse}
+            >
+              {' '}Points
+            </Sort>
+            <th>Archive</th>
           </tr>
-        </tbody>
-      ))}
-    </table>
-  );
-};
+        </thead>
+        {reverseSortedList.map(item => (
+          <tbody>
+            <tr key={item.objectID}>
+              <td><a href={item.url}>{item.title}</a></td>
+              <td>{item.author}</td>
+              <td>{item.num_comments}</td>
+              <td>{item.points}</td>
+              <td><Button className="delete" onClick={() => onDismiss(item.objectID)} /></td>
+            </tr>
+          </tbody>
+        ))}
+      </table>
+    );
+  }
+}
 
 Table.propTypes = {
   list: PropTypes.arrayOf(
@@ -160,8 +192,6 @@ class App extends Component {
       searchKey: DEFAULT_QUERY,
       searchTerm: DEFAULT_QUERY,
       isLoading: false,
-      sortKey: 'NONE',
-      isSortReverse: false,
     };
 
     // Bind class methods to object instances
@@ -171,7 +201,6 @@ class App extends Component {
     this.onSearchChange = this.onSearchChange.bind(this);
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
-    this.onSort = this.onSort.bind(this);
   }
 
   componentDidMount() {
@@ -216,18 +245,7 @@ class App extends Component {
 
   setSearchTopstories(result) {
     const { hits, page } = result;
-    const { searchKey, results } = this.state;
-
-    const oldHits = results && results[searchKey] ? results[searchKey].hits : [];
-
-    const updatedHits = [...oldHits, ...hits];
-    this.setState({
-      results: {
-        ...results,
-        [searchKey]: { hits: updatedHits, page },
-      },
-      isLoading: false,
-    });
+    this.setState(updateSearchTopstoriesState(hits, page));
   }
 
   fetchSearchTopstories(searchTerm, page) {
@@ -249,8 +267,6 @@ class App extends Component {
       searchKey,
       searchTerm,
       isLoading,
-      sortKey,
-      isSortReverse,
     } = this.state;
     const page = (results && results[searchKey] && results[searchKey].page) || 0;
     const list = (results && results[searchKey] && results[searchKey].hits) || [];
@@ -276,13 +292,7 @@ class App extends Component {
           </Search>
         </div>
         <div className="section">
-          <Table
-            list={list}
-            onDismiss={this.onDismiss}
-            sortKey={sortKey}
-            onSort={this.onSort}
-            isSortReverse={isSortReverse}
-          />
+          <Table list={list} onDismiss={this.onDismiss} />
           <div className="container is-fluid has-text-centered">
             {isLoading
               ? <Button className="button is-primary is-loading is-disabled">
