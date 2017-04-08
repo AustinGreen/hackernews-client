@@ -119,14 +119,6 @@ class App extends Component {
 
     return (
       <div>
-        {/* <div className="section">
-          <div className="tabs">
-            <ul>
-              <li className="is-active"><a>Search</a></li>
-              <li><a>Trending</a></li>
-            </ul>
-          </div>
-        </div> */}
         <div className="section column is-half is-offset-one-quarter">
           <Search
             value={searchTerm}
