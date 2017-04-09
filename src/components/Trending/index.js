@@ -1,30 +1,133 @@
+/* eslint-env browser */
+
 import React, { Component, PropTypes } from 'react';
+import Button from '../Button';
+import Search from '../Search';
 import Table from '../Table';
 
-import { PATH_BASE, PATH_SEARCH, PARAM_FRONT_PAGE } from '../../constants';
+import {
+  DEFAULT_QUERY,
+  DEFAULT_PAGE,
+  DEFAULT_HPP,
+  PATH_BASE,
+  PATH_SEARCH,
+  PARAM_FRONT_PAGE,
+} from '../../constants';
+
+const updateSearchTopstoriesState = (hits, page) =>
+  (prevState) => {
+    const { searchKey, results } = prevState;
+    const oldHits = results && results[searchKey] ? results[searchKey].hits : [];
+    const updatedHits = [...oldHits, ...hits];
+    return {
+      results: {
+        ...results,
+        [searchKey]: { hits: updatedHits, page },
+      },
+      isLoading: false,
+    };
+  };
 
 class Trending extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      results: null,
+      searchKey: DEFAULT_QUERY,
+      searchTerm: DEFAULT_QUERY,
+      isLoading: false,
+    };
 
     // Bind class methods to object instances
-    this.fetchTopstories = this.fetchTopstories.bind(this);
+    this.needsToSearchTopstories = this.needsToSearchTopstories.bind(this);
+    this.setSearchTopstories = this.setSearchTopstories.bind(this);
+    this.fetchSearchTopstories = this.fetchSearchTopstories.bind(this);
+    this.onSearchChange = this.onSearchChange.bind(this);
+    this.onSearchSubmit = this.onSearchSubmit.bind(this);
+    this.onDismiss = this.onDismiss.bind(this);
   }
 
   componentDidMount() {
-    this.fetchTopstories();
+    const { searchTerm } = this.state;
+    // this.setState({ searchKey: searchTerm });
+    // commented this out in favor of defaulting searchKey to DEFAULT_QUERY
+    this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
   }
 
-  fetchTopstories() {
+  onSort(sortKey) {
+    const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
+    this.setState({ sortKey, isSortReverse });
+  }
+
+  onSearchSubmit(e) {
+    const { searchTerm } = this.state;
+    this.setState({ searchKey: searchTerm });
+    if (this.needsToSearchTopstories(searchTerm)) {
+      this.fetchSearchTopstories(searchTerm, DEFAULT_PAGE);
+    }
+    e.preventDefault();
+  }
+
+  onDismiss(id) {
+    const { searchKey, results } = this.state;
+    const { hits, page } = results[searchKey];
+
+    const isNotId = item => item.objectID !== id;
+    const updatedHits = hits.filter(isNotId);
+
+    this.setState({
+      results: {
+        ...results,
+        [searchKey]: { hits: updatedHits, page },
+      },
+    });
+  }
+
+  onSearchChange(e) {
+    this.setState({ searchTerm: e.target.value });
+  }
+
+  setSearchTopstories(result) {
+    const { hits, page } = result;
+    this.setState(updateSearchTopstoriesState(hits, page));
+  }
+
+  fetchSearchTopstories(searchTerm, page) {
+    this.setState({ isLoading: true });
     fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_FRONT_PAGE}`)
       .then(response => response.json())
-      .then(result => console.log(result));
+      .then(result => this.setSearchTopstories(result));
+  }
+
+  needsToSearchTopstories(searchTerm) {
+    return !this.state.results[searchTerm];
   }
 
   render() {
+    const {
+      results,
+      searchKey,
+      searchTerm,
+      isLoading,
+    } = this.state;
+    const page = (results && results[searchKey] && results[searchKey].page) || 0;
+    const list = (results && results[searchKey] && results[searchKey].hits) || [];
+
     return (
       <div>
-        <div className="section" />
+        <div className="has-text-centered">
+          <h3 className="title is-4">🔥 Trending Stories 🔥</h3>
+        </div>
+        <div className="section">
+          <Table list={list} onDismiss={this.onDismiss} />
+          <div className="container is-fluid has-text-centered">
+            {isLoading
+              ? <Button className="button is-primary is-loading is-disabled">
+                  Load More
+                </Button>
+              : ''}
+          </div>
+        </div>
       </div>
     );
   }
