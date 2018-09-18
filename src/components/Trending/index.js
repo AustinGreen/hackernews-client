@@ -11,9 +11,7 @@ import {
   DEFAULT_HPP,
   PATH_BASE,
   PATH_SEARCH,
-  PARAM_SEARCH,
-  PARAM_PAGE,
-  PARAM_HPP,
+  PARAM_FRONT_PAGE,
 } from '../../constants';
 
 const updateSearchTopstoriesState = (hits, page) =>
@@ -30,7 +28,7 @@ const updateSearchTopstoriesState = (hits, page) =>
     };
   };
 
-class App extends Component {
+class Trending extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -96,9 +94,7 @@ class App extends Component {
 
   fetchSearchTopstories(searchTerm, page) {
     this.setState({ isLoading: true });
-    fetch(
-      `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`,
-    )
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_FRONT_PAGE}`)
       .then(response => response.json())
       .then(result => this.setSearchTopstories(result));
   }
@@ -119,15 +115,8 @@ class App extends Component {
 
     return (
       <div>
-        <div className="section column is-half is-offset-one-quarter">
-          <Search
-            value={searchTerm}
-            onChange={this.onSearchChange}
-            onSubmit={this.onSearchSubmit}
-            isLoading={isLoading}
-          >
-            Search
-          </Search>
+        <div className="has-text-centered">
+          <h3 className="title is-4">🔥 Trending Stories 🔥</h3>
         </div>
         <div className="section">
           <Table list={list} onDismiss={this.onDismiss} />
@@ -136,12 +125,7 @@ class App extends Component {
               ? <Button className="button is-primary is-loading is-disabled">
                   Load More
                 </Button>
-              : <Button
-                className="button is-primary"
-                onClick={() => this.fetchSearchTopstories(searchKey, page + 1)}
-              >
-                  Load More
-                </Button>}
+              : ''}
           </div>
         </div>
       </div>
@@ -149,4 +133,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default Trending;
